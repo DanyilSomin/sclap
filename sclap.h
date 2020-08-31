@@ -1,6 +1,8 @@
 #ifndef SCLAP_H
 #define SCLAP_H
 
+#include <stdint.h>
+
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
@@ -30,10 +32,10 @@ namespace sclap
 	/*------------------------------------------------------------------------------------------------*/
 	/*////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-	class OptDescriptor
+	class OptionDescriptor
 	{
 	public:
-		OptDescriptor(const char shortName, const char* longName,
+		OptionDescriptor(const char shortName, const char* longName,
 			uint8_t possibleArgumentValues)
 			: mShortName(shortName), mLongName(longName),
 			mPossibleArgumentValues(possibleArgumentValues)
@@ -53,30 +55,30 @@ namespace sclap
 	/*------------------------------------------------------------------------------------------------*/
 	/*////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-	class OptDescriptors
+	class OptionDescriptors
 	{
 	public:
-		OptDescriptors(const std::vector<OptDescriptor>& descriptors);
-		OptDescriptors() : mDescriptors(), mError(), mOk(true) {}
-		OptDescriptors(const OptDescriptors& optDesc)
+		OptionDescriptors(const std::vector<OptionDescriptor>& descriptors);
+		OptionDescriptors() : mDescriptors(), mError(), mOk(true) {}
+		OptionDescriptors(const OptionDescriptors& optDesc)
 			: mDescriptors(optDesc.mDescriptors), mOk(optDesc.mOk), mError(optDesc.mError.str())
 		{ }
 
-		const OptDescriptor* const operator[](const std::string& opt) const;
-		const OptDescriptor* const operator[](char opt) const;
+		const OptionDescriptor* const operator[](const std::string& opt) const;
+		const OptionDescriptor* const operator[](char opt) const;
 
-		bool ok() const { return mOk; }
+		bool valid() const { return mOk; }
 		std::string error() const { return mError.str(); }
 
-		OptDescriptors& operator<<(const OptDescriptor& optDescriptor)
+		OptionDescriptors& operator<<(const OptionDescriptor& OptionDescriptor)
 		{
-			mDescriptors.push_back(optDescriptor);
+			mDescriptors.push_back(OptionDescriptor);
 			check();
 			return *this;
 		}
 
 	private:
-		std::vector<OptDescriptor> mDescriptors;
+		std::vector<OptionDescriptor> mDescriptors;
 
 		std::stringstream mError;
 		bool mOk;
@@ -86,7 +88,7 @@ namespace sclap
 
 	/*////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-	OptDescriptors::OptDescriptors(const std::vector<OptDescriptor>& descriptors)
+	OptionDescriptors::OptionDescriptors(const std::vector<OptionDescriptor>& descriptors)
 		: mDescriptors(descriptors), mError(), mOk(false)
 	{
 		check();
@@ -94,7 +96,7 @@ namespace sclap
 
 	/*////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-	void OptDescriptors::check()
+	void OptionDescriptors::check()
 	{
 		std::vector<char> existingShortNames;
 		std::vector<std::string> existinglongNames;
@@ -134,7 +136,7 @@ namespace sclap
 
 	/*////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-	const OptDescriptor* const OptDescriptors::operator[](const std::string& opt) const
+	const OptionDescriptor* const OptionDescriptors::operator[](const std::string& opt) const
 	{
 		if (opt.empty()) { return NULL; }
 
@@ -156,7 +158,7 @@ namespace sclap
 
 	/*////////////////////////////////////////////////////////////////////////////////////////////////*/
 
-	const OptDescriptor* const OptDescriptors::operator[](char opt) const
+	const OptionDescriptor* const OptionDescriptors::operator[](char opt) const
 	{
 		for (size_t i = 0; i < mDescriptors.size(); ++i)
 		{
@@ -200,7 +202,7 @@ namespace sclap
 			return std::vector<bool>();
 		}
 
-		virtual uint8_t type() const = 0 { return 0; }
+		virtual uint8_t type() const = 0;
 
 		operator bool() const { return type(); }
 
@@ -208,12 +210,28 @@ namespace sclap
 			char** inOutCurArgumentStr, int argc, char** inArgv) = 0;
 	};
 
+	uint8_t OptionValue::type() const {
+		return 0;
+	}
+
 	/*////////////////////////////////////////////////////////////////////////////////////////////////*/
 	/*------------------------------------------------------------------------------------------------*/
 	/*////////////////////////////////////////////////////////////////////////////////////////////////*/
 
 	namespace hidden
 	{
+		/*////////////////////////////////////////////////////////////////////////////////////////////*/
+		/*--------------------------------------------------------------------------------------------*/
+		/*////////////////////////////////////////////////////////////////////////////////////////////*/
+		
+		template <typename T>
+		std::string numberToString(T Number)
+		{
+			std::ostringstream ss;
+			ss << Number;
+			return ss.str();
+		}
+
 		/*////////////////////////////////////////////////////////////////////////////////////////////*/
 		/*--------------------------------------------------------------------------------------------*/
 		/*////////////////////////////////////////////////////////////////////////////////////////////*/
@@ -234,7 +252,7 @@ namespace sclap
 		{
 			char* end = NULL;
 			val = strtod(s, &end);
-			return end != s && *end == '\0' && val != HUGE_VAL;
+			return end != s && *end == '\0';
 		}
 
 		/*////////////////////////////////////////////////////////////////////////////////////////////*/
@@ -329,26 +347,26 @@ namespace sclap
 		class OptionValueInt : public OptionValue
 		{
 		public:
-			virtual const std::string asString() const { return std::to_string(mValue); };
+			virtual const std::string asString() const { return hidden::numberToString(mValue); };
 			virtual double asReal() const { return mValue; };
 			virtual int asInteger() const { return mValue; };
 			virtual bool asBool() const { return mValue; };
 
 			virtual const std::vector<std::string> asStringVector() const
 			{
-				return std::vector<std::string>({ asString() });
+				return std::vector<std::string>(1, asString());
 			}
 			virtual const std::vector<double> asRealVector() const
 			{
-				return std::vector<double>({ asReal() });
+				return std::vector<double>(1, asReal());
 			}
 			virtual const std::vector<int> asIntegerVector() const
 			{
-				return std::vector<int>({ asInteger() });
+				return std::vector<int>(1, asInteger());;
 			}
 			virtual const std::vector<bool> asBoolVector() const
 			{
-				return std::vector<bool>({ asBool() });
+				return std::vector<bool>(1, asBool());
 			}
 
 			virtual uint8_t type() const { return ARG_INT; }
@@ -370,16 +388,16 @@ namespace sclap
 		class OptionValueReal : public OptionValue
 		{
 		public:
-			virtual const std::string asString() const { return std::to_string(mValue); };
+			virtual const std::string asString() const { return hidden::numberToString(mValue); };
 			virtual double asReal() const { return mValue; };
 
 			virtual const std::vector<std::string> asStringVector() const
 			{
-				return std::vector<std::string>({ asString() });
+				return std::vector<std::string>(1, asString());
 			}
 			virtual const std::vector<double> asRealVector() const
 			{
-				return std::vector<double>({ asReal() });
+				return std::vector<double>(1, asReal());
 			}
 
 			virtual uint8_t type() const { return ARG_REAL; }
@@ -405,7 +423,7 @@ namespace sclap
 
 			virtual const std::vector<std::string> asStringVector() const
 			{
-				return std::vector<std::string>({ asString() });
+				return std::vector<std::string>(1, asString());
 			}
 
 			virtual uint8_t type() const { return ARG_STRING; }
@@ -436,7 +454,7 @@ namespace sclap
 					valueStr += " ";
 				}
 
-				valueStr.pop_back();
+				valueStr = valueStr.substr(1, valueStr.size() - 1);
 				return valueStr;
 			}
 			virtual const std::vector<std::string> asStringVector() const;
@@ -509,7 +527,7 @@ namespace sclap
 		class OptionValueIntVector : public OptionValue
 		{
 		public:
-			virtual const std::string asString() const { return std::to_string(mValue[0]); };
+			virtual const std::string asString() const { return hidden::numberToString(mValue[0]); };
 			virtual double asReal() const { return mValue[0]; };
 			virtual int asInteger() const { return mValue[0]; };
 			virtual bool asBool() const { return mValue[0]; };
@@ -519,7 +537,10 @@ namespace sclap
 			{
 				return std::vector<double>(mValue.begin(), mValue.end());
 			}
-			virtual const std::vector<int> asIntegerVector() const { return std::vector<int>(mValue); }
+			virtual const std::vector<int> asIntegerVector() const
+			{ 
+				return mValue;
+			}
 			virtual const std::vector<bool> asBoolVector() const
 			{
 				return std::vector<bool>(mValue.begin(), mValue.end());
@@ -541,7 +562,7 @@ namespace sclap
 			std::vector<std::string> ret(mValue.size());
 			for (size_t i = 0; i < mValue.size(); ++i)
 			{
-				ret[i] = std::to_string(mValue[i]);
+				ret[i] = hidden::numberToString(mValue[i]);
 			}
 
 			return ret;
@@ -578,7 +599,7 @@ namespace sclap
 		class OptionValueRealVector : public OptionValue
 		{
 		public:
-			virtual const std::string asString() const { return std::to_string(mValue[0]); };
+			virtual const std::string asString() const { return hidden::numberToString(mValue[0]); };
 			virtual double asReal() const { return mValue[0]; };
 
 			virtual const std::vector<std::string> asStringVector() const;
@@ -600,7 +621,7 @@ namespace sclap
 			std::vector<std::string> ret(mValue.size());
 			for (size_t i = 0; i < mValue.size(); ++i)
 			{
-				ret[i] = std::to_string(mValue[i]);
+				ret[i] = hidden::numberToString(mValue[i]);
 			}
 
 			return ret;
@@ -676,7 +697,7 @@ namespace sclap
 		/*////////////////////////////////////////////////////////////////////////////////////////////*/
 		/*--------------------------------------------------------------------------------------------*/
 		/*////////////////////////////////////////////////////////////////////////////////////////////*/
-	};
+	}
 
 	/*////////////////////////////////////////////////////////////////////////////////////////////////*/
 	/*------------------------------------------------------------------------------------------------*/
@@ -708,10 +729,15 @@ namespace sclap
 			return mLongName;
 		}
 
-		const OptionValue& value() const
-		{
-			return *mValue;
-		}
+		bool asBool() const { return mValue->asBool(); }
+		const std::vector<bool> asBoolVector() const { return mValue->asBoolVector(); }
+		int asInteger() const { return mValue->asInteger(); }
+		const std::vector<int> asIntegerVector() const { return mValue->asIntegerVector(); }
+		double asDouble() const { return mValue->asReal(); }
+		const std::vector<double> asRealVector() const { return mValue->asRealVector(); }
+		const std::string asString() const { return mValue->asString(); }
+		const std::vector<std::string> asStringVector() const { return mValue->asStringVector(); }
+		operator bool() const { return asBool(); }
 
 	private:
 		static hidden::OptionValueUnexisted sOptionNone;
@@ -732,12 +758,13 @@ namespace sclap
 	class Options
 	{
 	public:
-		Options(OptDescriptors& descriptors, int argc, char** argv)
+		Options(OptionDescriptors& descriptors, int argc, char** argv)
 			: mDescriptors(descriptors)
 		{
-			if (mDescriptors.ok())
+			if (mDescriptors.valid())
 			{
 				parse(argc, argv);
+				mOk = true;
 			}
 		}
 
@@ -753,22 +780,22 @@ namespace sclap
 			}
 		}
 
-		bool ok() const { return mOk; }
+		bool valid() const { return mOk; }
 		std::string error() const { return mError.str(); }
 
-		const Option& operator[](std::string opt) const;
-		const Option& operator[](char opt) const;
+		const Option& operator[](std::string option) const;
+		const Option& operator[](char option) const;
 
 	private:
 		static Option sOptionNone;
 
-		OptDescriptors mDescriptors;
+		OptionDescriptors mDescriptors;
 		
 		std::vector<Option*> mOptions;
 		std::vector<OptionValue*> mOptionValues;
 
 		std::stringstream mError;
-		bool mOk = true;
+		bool mOk;
 
 		void parse(int argc, char** argv);
 		bool readOptionNames(int& inOutCurIndex, char** inOutCurArgumentStr,
@@ -793,11 +820,11 @@ namespace sclap
 			if (**inOutCurArgumentStr == '-')
 			{
 				++* inOutCurArgumentStr;
-				std::string optName;
+				std::string optionName;
 
 				while ((**inOutCurArgumentStr != '=') && (**inOutCurArgumentStr != '\0'))
 				{
-					optName.push_back(*(*inOutCurArgumentStr)++);
+					optionName.push_back(*(*inOutCurArgumentStr)++);
 				}
 
 				if (**inOutCurArgumentStr == '\0')
@@ -810,14 +837,20 @@ namespace sclap
 					++* inOutCurArgumentStr;
 				}
 
-				if (optName.size())
+				if (optionName.size())
 				{
-					outOptionNames.insert(optName);
+					if (!mDescriptors[optionName])
+					{
+						mOk = false;
+						mError << "Error: " << inArgv[inOutCurIndex] << " is not existing option.\n";
+						return false;
+					}
+					outOptionNames.insert(optionName);
 				}
 				else
 				{
 					mOk = false;
-					mError << "Error: " << inArgv[inOutCurIndex] << ". Zero length option.\n";
+					mError << "Error: " << optionName << ". Zero length option.\n";
 					return false;
 				}
 			}
@@ -829,6 +862,12 @@ namespace sclap
 					std::string opt(1, **inOutCurArgumentStr);
 					if (outOptionNames.find(opt) == outOptionNames.end())
 					{
+						if (!mDescriptors[opt])
+						{
+							mOk = false;
+							mError << "Error: " << opt << " is not existing option.\n";
+							return false;
+						}
 						outOptionNames.insert(opt);
 						++(*inOutCurArgumentStr);
 					}
@@ -903,9 +942,11 @@ namespace sclap
 
 		while (curIndex < argc)
 		{
-			std::set<std::string> optNames;
-			if (!readOptionNames(curIndex, &curArgumentStr, argv, optNames))
+			std::set<std::string> optionNames;
+			if (!readOptionNames(curIndex, &curArgumentStr, argv, optionNames))
 			{
+				mOk = false;
+				mError << mDescriptors.error();
 				break;
 			}
 
@@ -913,11 +954,11 @@ namespace sclap
 			bool onlyFlags = true;
 			uint8_t typeBase = 0;
 			uint8_t typeShift = 0;
-			for (std::set<std::string>::const_iterator it = optNames.begin();
-				it != optNames.end();
+			for (std::set<std::string>::const_iterator it = optionNames.begin();
+				it != optionNames.end();
 				++it)
 			{
-				const OptDescriptor* desc = mDescriptors[*it];
+				const OptionDescriptor* desc = mDescriptors[*it];
 				if (desc == NULL)
 				{
 					optionsExist = false;
@@ -987,8 +1028,8 @@ namespace sclap
 				mOk = false;
 				mError << "Failed to read argument.\n";
 			}
-			for (std::set<std::string>::const_iterator it = optNames.begin();
-				it != optNames.end(); ++it)
+			for (std::set<std::string>::const_iterator it = optionNames.begin();
+				it != optionNames.end(); ++it)
 			{
 				mOptions.push_back(new Option(mDescriptors[*it]->shortName(),
 					mDescriptors[*it]->longName(),
