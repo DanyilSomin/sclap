@@ -681,16 +681,15 @@ namespace sclap
 			mValue.clear();
 
 			std::string strArg;
-			while (**inOutCurArgumentStr != '\0'
+			while (inOutCurIndex < argc
 				&& **inOutCurArgumentStr != '-'
-				&& inOutCurIndex < argc)
+				&& **inOutCurArgumentStr != '\0')
 			{
 				if (readString(inOutCurIndex, inOutCurArgumentStr, inArgv, strArg))
 				{
 					mValue.push_back(strArg);
 				}
 			}
-
 			return mValue.size() > 0;
 		}
 
@@ -953,7 +952,7 @@ namespace sclap
 			bool optionsExist = true;
 			bool onlyFlags = true;
 			uint8_t typeBase = 0;
-			uint8_t typeShift = 0;
+			uint8_t typeShift = 1;
 			for (std::set<std::string>::const_iterator it = optionNames.begin();
 				it != optionNames.end();
 				++it)
@@ -968,10 +967,8 @@ namespace sclap
 				}
 
 				const uint8_t curPossibleArgumentValues = desc->possibleArgumentValues();
-
 				onlyFlags = onlyFlags && (curPossibleArgumentValues == ARG_NONE);
-
-				if (hidden::isSingleArgType(curPossibleArgumentValues))
+				if (!hidden::isSingleArgType(curPossibleArgumentValues))
 				{
 					if (curPossibleArgumentValues > typeShift)
 					{
@@ -1020,6 +1017,9 @@ namespace sclap
 					mOptionValues.push_back(new hidden::OptionValueIntVector); break;
 				case ARG_REAL_VEC:
 					mOptionValues.push_back(new hidden::OptionValueRealVector); break;
+				default:
+					std::cout << "Error\n";
+					exit(-1);
 				}
 			}
 
@@ -1028,6 +1028,7 @@ namespace sclap
 				mOk = false;
 				mError << "Failed to read argument.\n";
 			}
+
 			for (std::set<std::string>::const_iterator it = optionNames.begin();
 				it != optionNames.end(); ++it)
 			{
