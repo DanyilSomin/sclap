@@ -431,7 +431,7 @@ namespace sclap
 			virtual bool read(int& inOutCurIndex,
 				char** inOutCurArgumentStr, int argc, char** inArgv)
 			{
-				return readString(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
+				readString(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
 			}
 
 		private:
@@ -762,8 +762,8 @@ namespace sclap
 		{
 			if (mDescriptors.valid())
 			{
-				parse(argc, argv);
 				mOk = true;
+				parse(argc, argv);
 			}
 		}
 
