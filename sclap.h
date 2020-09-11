@@ -314,6 +314,31 @@ namespace sclap
 		/*--------------------------------------------------------------------------------------------*/
 		/*////////////////////////////////////////////////////////////////////////////////////////////*/
 
+		uint8_t getTypeToRead(uint8_t single, uint8_t vector)
+		{
+			if (vector == ARG_REAL_VEC) return ARG_REAL_VEC;
+			else if (vector == ARG_INT_VEC) {
+				  if (single == ARG_REAL) return ARG_REAL_VEC;
+				  else return ARG_INT_VEC;
+			}
+			else if (vector == ARG_BOOL_VEC)
+			{
+				if (single == ARG_REAL) return ARG_REAL_VEC;
+				else if (single == ARG_INT) return ARG_INT_VEC;
+				else return ARG_BOOL_VEC;
+			}
+			else if (vector == ARG_STRING_VEC) {
+				if (single == ARG_REAL) return ARG_REAL_VEC;
+				else if (single == ARG_INT) return ARG_INT_VEC;
+				else return ARG_STRING_VEC;
+			}
+			else return single;
+		}
+
+		/*////////////////////////////////////////////////////////////////////////////////////////////*/
+		/*--------------------------------------------------------------------------------------------*/
+		/*////////////////////////////////////////////////////////////////////////////////////////////*/
+
 		class OptionValueUnexisted : public OptionValue
 		{
 		public:
@@ -431,7 +456,7 @@ namespace sclap
 			virtual bool read(int& inOutCurIndex,
 				char** inOutCurArgumentStr, int argc, char** inArgv)
 			{
-				readString(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
+				return readString(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
 			}
 
 		private:
@@ -951,12 +976,13 @@ namespace sclap
 
 			bool optionsExist = true;
 			bool onlyFlags = true;
-			uint8_t typeBase = 0;
-			uint8_t typeShift = 1;
+			uint8_t typeVector = 0;
+			uint8_t typeSingle = 1;
 			for (std::set<std::string>::const_iterator it = optionNames.begin();
 				it != optionNames.end();
 				++it)
 			{
+				std::cout << *it << '\n';
 				const OptionDescriptor* desc = mDescriptors[*it];
 				if (desc == NULL)
 				{
@@ -970,14 +996,14 @@ namespace sclap
 				onlyFlags = onlyFlags && (curPossibleArgumentValues == ARG_NONE);
 				if (!hidden::isSingleArgType(curPossibleArgumentValues))
 				{
-					if (curPossibleArgumentValues > typeShift)
+					if (curPossibleArgumentValues > typeSingle)
 					{
-						typeShift = curPossibleArgumentValues;
+						typeSingle = curPossibleArgumentValues;
 					}
 				}
-				else if (typeBase < curPossibleArgumentValues)
+				else if (typeVector < curPossibleArgumentValues)
 				{
-					typeBase = curPossibleArgumentValues;
+					typeVector = curPossibleArgumentValues;
 				}
 			}
 
@@ -989,15 +1015,11 @@ namespace sclap
 			}
 			else
 			{
-				uint8_t argumentValues;
-				if (!typeBase)
-				{
-					argumentValues = typeShift;
-				}
-				else
-				{
-					argumentValues = typeBase * typeShift;
-				}
+				uint8_t argumentValues = hidden::getTypeToRead(typeSingle, typeVector);
+
+				std::cout << "typeVector: " << (int)typeVector << '\n'
+						  << "TypeSingle: " << (int)typeSingle << '\n'
+						  << "ArgumentValues: " << (int)argumentValues << '\n';
 
 				switch (argumentValues)
 				{
@@ -1018,7 +1040,7 @@ namespace sclap
 				case ARG_REAL_VEC:
 					mOptionValues.push_back(new hidden::OptionValueRealVector); break;
 				default:
-					std::cout << "Error\n";
+					std::cout << "Read error.\n";
 					exit(-1);
 				}
 			}
@@ -1027,8 +1049,10 @@ namespace sclap
 			{
 				mOk = false;
 				mError << "Failed to read argument.\n";
+				return;
 			}
 
+			std::cout << "Option nammes length: " << optionNames.size() << '\n';
 			for (std::set<std::string>::const_iterator it = optionNames.begin();
 				it != optionNames.end(); ++it)
 			{
