@@ -1,0 +1,6 @@
+tests/*
+!tests/CMakeLists.txt
+!tests/lib
+!tests/tests.cpp
+tests/lib/*
+!tests/lib/googletest
