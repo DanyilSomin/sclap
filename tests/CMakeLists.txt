@@ -10,7 +10,7 @@ add_subdirectory(lib/googletest)
 
 set(BINARY ${CMAKE_PROJECT_NAME})
 
-add_executable(${BINARY} test.cpp)
+add_executable(${BINARY} tests.cpp)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(${BINARY} PRIVATE "/MT$<$<CONFIG:Debug>:d>")

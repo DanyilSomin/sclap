@@ -357,13 +357,45 @@ namespace sclap
 		class OptionValueBool : public OptionValue
 		{
 		public:
-			virtual const std::string asString() const { return "true"; };
+			virtual const std::string asString() const { return mValue ? "true" : "false"; };
 
 			virtual uint8_t type() const { return ARG_NONE; }
 
 			virtual bool read(int& inOutCurIndex, char** inOutCurArgumentStr,
-				int argc, char** inArgv) { return true; }
+				int argc, char** inArgv);
+
+			virtual bool asBool() const { return mValue; };
+
+		private:
+			bool mValue;
 		};
+
+		/*////////////////////////////////////////////////////////////////////////////////////////////*/
+
+		bool OptionValueBool::read(int& inOutCurIndex, char** inOutCurArgumentStr,
+			int argc, char** inArgv)
+		{
+			if (inOutCurIndex < argc) 
+			{	
+				if (!strcmp(*inOutCurArgumentStr, "true"))
+				{
+					++inOutCurIndex;
+					*inOutCurArgumentStr = inArgv[inOutCurIndex];
+					mValue = true;
+					return true;
+				}
+				else if (!strcmp(*inOutCurArgumentStr, "false"))
+				{
+					++inOutCurIndex;
+					*inOutCurArgumentStr = inArgv[inOutCurIndex];
+					mValue = false;
+					return true;
+				}	
+			}
+
+			mValue = true;
+			return true;
+		}
 
 		/*////////////////////////////////////////////////////////////////////////////////////////////*/
 		/*--------------------------------------------------------------------------------------------*/
@@ -387,7 +419,7 @@ namespace sclap
 			}
 			virtual const std::vector<int> asIntegerVector() const
 			{
-				return std::vector<int>(1, asInteger());;
+				return std::vector<int>(1, asInteger());
 			}
 			virtual const std::vector<bool> asBoolVector() const
 			{
@@ -415,6 +447,7 @@ namespace sclap
 		public:
 			virtual const std::string asString() const { return hidden::numberToString(mValue); };
 			virtual double asReal() const { return mValue; };
+			virtual int asInteger() const { return (int)mValue; };
 
 			virtual const std::vector<std::string> asStringVector() const
 			{
@@ -484,7 +517,7 @@ namespace sclap
 			}
 			virtual const std::vector<std::string> asStringVector() const;
 			virtual bool asBool() const { return mValue[0]; }
-			virtual const std::vector<bool> asBoolVector() { return mValue; }
+			virtual const std::vector<bool> asBoolVector() const { return mValue; }
   
 			virtual uint8_t type() const { return ARG_BOOL_VEC; }
 
@@ -506,9 +539,9 @@ namespace sclap
 			mValue.clear();
 
 			std::string strArg;
-			while (**inOutCurArgumentStr != '\0' 
+			while (inOutCurIndex < argc 
 				&& **inOutCurArgumentStr != '-' 
-				&& inOutCurIndex < argc)
+				&& **inOutCurArgumentStr != '\0')
 			{
 				if (readString(inOutCurIndex, inOutCurArgumentStr, inArgv, strArg))
 				{
@@ -604,13 +637,19 @@ namespace sclap
 			mValue.clear();
 
 			int intArg;
-			while (**inOutCurArgumentStr != '\0'
+			while (inOutCurIndex < argc
 				&& **inOutCurArgumentStr != '-'
-				&& inOutCurIndex < argc)
+				&& **inOutCurArgumentStr != '\0')
 			{
 				if (readInt(inOutCurIndex, inOutCurArgumentStr, inArgv, intArg))
 				{
 					mValue.push_back(intArg);
+				} 
+				else
+				{
+					inOutCurIndex = startIndex;
+					inOutCurArgumentStr = startArgument;
+					return false;
 				}
 			}
 
@@ -663,9 +702,9 @@ namespace sclap
 			mValue.clear();
 
 			double doubleArg;
-			while (**inOutCurArgumentStr != '\0'
+			while (inOutCurIndex < argc
 				&& **inOutCurArgumentStr != '-'
-				&& inOutCurIndex < argc)
+				&& **inOutCurArgumentStr != '\0')
 			{
 				if (readDouble(inOutCurIndex, inOutCurArgumentStr, inArgv, doubleArg))
 				{
@@ -753,6 +792,7 @@ namespace sclap
 			return mLongName;
 		}
 
+		uint8_t type() const { return mValue->type(); }
 		bool asBool() const { return mValue->asBool(); }
 		const std::vector<bool> asBoolVector() const { return mValue->asBoolVector(); }
 		int asInteger() const { return mValue->asInteger(); }
@@ -982,7 +1022,6 @@ namespace sclap
 				it != optionNames.end();
 				++it)
 			{
-				std::cout << *it << '\n';
 				const OptionDescriptor* desc = mDescriptors[*it];
 				if (desc == NULL)
 				{
@@ -994,7 +1033,7 @@ namespace sclap
 
 				const uint8_t curPossibleArgumentValues = desc->possibleArgumentValues();
 				onlyFlags = onlyFlags && (curPossibleArgumentValues == ARG_NONE);
-				if (!hidden::isSingleArgType(curPossibleArgumentValues))
+				if (hidden::isSingleArgType(curPossibleArgumentValues))
 				{
 					if (curPossibleArgumentValues > typeSingle)
 					{
@@ -1017,10 +1056,6 @@ namespace sclap
 			{
 				uint8_t argumentValues = hidden::getTypeToRead(typeSingle, typeVector);
 
-				std::cout << "typeVector: " << (int)typeVector << '\n'
-						  << "TypeSingle: " << (int)typeSingle << '\n'
-						  << "ArgumentValues: " << (int)argumentValues << '\n';
-
 				switch (argumentValues)
 				{
 				case ARG_STRING:
@@ -1040,7 +1075,7 @@ namespace sclap
 				case ARG_REAL_VEC:
 					mOptionValues.push_back(new hidden::OptionValueRealVector); break;
 				default:
-					std::cout << "Read error.\n";
+					mError << "Read error.\n";
 					exit(-1);
 				}
 			}
@@ -1052,7 +1087,6 @@ namespace sclap
 				return;
 			}
 
-			std::cout << "Option nammes length: " << optionNames.size() << '\n';
 			for (std::set<std::string>::const_iterator it = optionNames.begin();
 				it != optionNames.end(); ++it)
 			{

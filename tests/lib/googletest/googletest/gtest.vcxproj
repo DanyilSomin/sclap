@@ -231,6 +231,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <CustomBuild Include="C:\rep\sclap\tests\lib\googletest\googletest\CMakeLists.txt">
+      <StdOutEncoding>UTF-8</StdOutEncoding>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/rep/sclap/tests/lib/googletest/googletest/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
 "C:\Program Files\CMake\bin\cmake.exe" -SC:/rep/sclap/tests -BC:/rep/sclap/tests --check-stamp-file C:/rep/sclap/tests/lib/googletest/googletest/CMakeFiles/generate.stamp

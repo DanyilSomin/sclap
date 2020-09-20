@@ -1,6 +1,10 @@
 tests/*
 !tests/CMakeLists.txt
-!tests/lib
 !tests/tests.cpp
-tests/lib/*
 !tests/lib/googletest
+.vscode
+
+/tests/lib/googletest/googletest/gtest_main.dir/*
+/tests/lib/googletest/googletest/gtest.dir/*
+/tests/lib/googletest/googletest/gtest.dir
+/tests/lib/googletest/googletest/gtest_main.dir
