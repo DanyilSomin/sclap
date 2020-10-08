@@ -7,6 +7,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <string>
+#include <cstring>
 #include <vector>
 #include <set>
 
@@ -431,6 +432,10 @@ namespace sclap
 			virtual bool read(int& inOutCurIndex,
 				char** inOutCurArgumentStr, int argc, char** inArgv)
 			{
+				if (inOutCurIndex >= argc)
+				{
+					return false;
+				}
 				return readInt(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
 			}
 
@@ -463,6 +468,10 @@ namespace sclap
 			virtual bool read(int& inOutCurIndex,
 				char** inOutCurArgumentStr, int argc, char** inArgv)
 			{
+				if (inOutCurIndex >= argc)
+				{
+					return false;
+				}
 				return readDouble(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
 			}
 
@@ -493,10 +502,7 @@ namespace sclap
 				{
 					return false;
 				}
-				else
-				{
-					return readString(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
-				}
+				return readString(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
 			}
 
 		private:
