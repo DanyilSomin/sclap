@@ -489,7 +489,14 @@ namespace sclap
 			virtual bool read(int& inOutCurIndex,
 				char** inOutCurArgumentStr, int argc, char** inArgv)
 			{
-				return readString(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
+				if (inOutCurIndex >= argc)
+				{
+					return false;
+				}
+				else
+				{
+					return readString(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
+				}
 			}
 
 		private:
