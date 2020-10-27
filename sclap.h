@@ -19,7 +19,7 @@ namespace sclap
 
 	const uint8_t UNEXISTED      = 0;
 	const uint8_t ARG_STRING     = 1 << 0;
-	const uint8_t ARG_NONE       = 1 << 1;
+	const uint8_t ARG_BOOL       = 1 << 1;
 	const uint8_t ARG_INT        = 1 << 2;
 	const uint8_t ARG_REAL       = 1 << 3;
 	const uint8_t ARG_STRING_VEC = 1 << 4;
@@ -360,7 +360,7 @@ namespace sclap
 		public:
 			virtual const std::string asString() const { return mValue ? "true" : "false"; };
 
-			virtual uint8_t type() const { return ARG_NONE; }
+			virtual uint8_t type() const { return ARG_BOOL; }
 
 			virtual bool read(int& inOutCurIndex, char** inOutCurArgumentStr,
 				int argc, char** inArgv);
@@ -432,10 +432,6 @@ namespace sclap
 			virtual bool read(int& inOutCurIndex,
 				char** inOutCurArgumentStr, int argc, char** inArgv)
 			{
-				if (inOutCurIndex >= argc)
-				{
-					return false;
-				}
 				return readInt(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
 			}
 
@@ -468,10 +464,6 @@ namespace sclap
 			virtual bool read(int& inOutCurIndex,
 				char** inOutCurArgumentStr, int argc, char** inArgv)
 			{
-				if (inOutCurIndex >= argc)
-				{
-					return false;
-				}
 				return readDouble(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
 			}
 
@@ -502,7 +494,10 @@ namespace sclap
 				{
 					return false;
 				}
-				return readString(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
+				else
+				{
+					return readString(inOutCurIndex, inOutCurArgumentStr, inArgv, mValue);
+				}
 			}
 
 		private:
@@ -890,6 +885,8 @@ namespace sclap
 	bool Options::readOptionNames(int& inOutCurIndex, char** inOutCurArgumentStr,
 		char** inArgv, std::set<std::string>& outOptionNames)
 	{
+        char *startArgumentStr = *inOutCurArgumentStr;
+
 		if (**inOutCurArgumentStr == '-')
 		{
 			++* inOutCurArgumentStr;
@@ -914,20 +911,25 @@ namespace sclap
 					++* inOutCurArgumentStr;
 				}
 
-				if (optionName.size())
+				if (mDescriptors[optionName])
 				{
-					if (!mDescriptors[optionName])
-					{
-						mOk = false;
-						mError << "Error: " << inArgv[inOutCurIndex] << " is not existing option.\n";
-						return false;
-					}
 					outOptionNames.insert(optionName);
 				}
 				else
 				{
-					mOk = false;
-					mError << "Error: " << optionName << ". Zero length option.\n";
+                    mOk = false;
+                    --inOutCurIndex;
+                    *inOutCurArgumentStr = startArgumentStr;
+
+                    if (optionName.size())
+                    {
+                        mError << "Error: " << optionName << ". Is not an option.\n";
+					}
+                    else
+                    {
+                        mError << "Error: " << inArgv[inOutCurIndex] << ". Zero length option.\n";
+					}
+
 					return false;
 				}
 			}
@@ -1045,7 +1047,7 @@ namespace sclap
 				}
 
 				const uint8_t curPossibleArgumentValues = desc->possibleArgumentValues();
-				onlyFlags = onlyFlags && (curPossibleArgumentValues == ARG_NONE);
+				onlyFlags = onlyFlags && (curPossibleArgumentValues == ARG_BOOL);
 				if (hidden::isSingleArgType(curPossibleArgumentValues))
 				{
 					if (curPossibleArgumentValues > typeSingle)
@@ -1073,7 +1075,7 @@ namespace sclap
 				{
 				case ARG_STRING:
 					mOptionValues.push_back(new hidden::OptionValueString); break;
-				case ARG_NONE:
+				case ARG_BOOL:
 					mOptionValues.push_back(new hidden::OptionValueBool); break;
 				case ARG_INT:
 					mOptionValues.push_back(new hidden::OptionValueInt); break;

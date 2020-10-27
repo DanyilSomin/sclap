@@ -21,7 +21,7 @@ TEST(SingleReadTest, TestBool1)
     argv[1] = "-t=true";
 
     sclap::OptionDescriptors descriptors;
-    descriptors << sclap::OptionDescriptor('t', "", sclap::ARG_NONE);
+    descriptors << sclap::OptionDescriptor('t', "", sclap::ARG_BOOL);
 
     sclap::Options options(descriptors, argc, argv);
     EXPECT_TRUE(descriptors.valid());
@@ -31,7 +31,7 @@ TEST(SingleReadTest, TestBool1)
     EXPECT_TRUE(options['t'].asBool());
     EXPECT_EQ(options['t'].asString(), "true");
 
-    EXPECT_EQ(options['t'].type(), sclap::ARG_NONE);
+    EXPECT_EQ(options['t'].type(), sclap::ARG_BOOL);
 }
 
 /*////////////////////////////////////////////////////////////////////////////////////////////////*/
@@ -45,7 +45,7 @@ TEST(SingleReadTest, TestBool2)
     argv[2] = "false";
 
     sclap::OptionDescriptors descriptors;
-    descriptors << sclap::OptionDescriptor('t', "", sclap::ARG_NONE);
+    descriptors << sclap::OptionDescriptor('t', "", sclap::ARG_BOOL);
 
     sclap::Options options(descriptors, argc, argv);
     EXPECT_TRUE(descriptors.valid());
@@ -65,7 +65,7 @@ TEST(SingleReadTest, TestBool3)
     argv[1] = "--test";
 
     sclap::OptionDescriptors descriptors;
-    descriptors << sclap::OptionDescriptor('t', "test", sclap::ARG_NONE);
+    descriptors << sclap::OptionDescriptor('t', "test", sclap::ARG_BOOL);
 
     sclap::Options options(descriptors, argc, argv);
     EXPECT_TRUE(descriptors.valid());
@@ -250,8 +250,8 @@ TEST(DoubleReadTest, TestBool1)
     argv[2] = "-e=false";
 
     sclap::OptionDescriptors descriptors;
-    descriptors << sclap::OptionDescriptor('t', "", sclap::ARG_NONE)
-                << sclap::OptionDescriptor('e', "", sclap::ARG_NONE);
+    descriptors << sclap::OptionDescriptor('t', "", sclap::ARG_BOOL)
+                << sclap::OptionDescriptor('e', "", sclap::ARG_BOOL);
 
     sclap::Options options(descriptors, argc, argv);
     EXPECT_TRUE(descriptors.valid());
@@ -265,8 +265,8 @@ TEST(DoubleReadTest, TestBool1)
     EXPECT_FALSE(options['e'].asBool());
     EXPECT_EQ(options['e'].asString(), "false");
 
-    EXPECT_EQ(options['t'].type(), sclap::ARG_NONE);
-    EXPECT_EQ(options['e'].type(), sclap::ARG_NONE);
+    EXPECT_EQ(options['t'].type(), sclap::ARG_BOOL);
+    EXPECT_EQ(options['e'].type(), sclap::ARG_BOOL);
 }
 
 /*////////////////////////////////////////////////////////////////////////////////////////////////*/
@@ -282,8 +282,8 @@ TEST(DoubleReadTest, TestBool2)
     argv[4] = "false";
 
     sclap::OptionDescriptors descriptors;
-    descriptors << sclap::OptionDescriptor('t', "", sclap::ARG_NONE)
-                << sclap::OptionDescriptor('e', "", sclap::ARG_NONE);
+    descriptors << sclap::OptionDescriptor('t', "", sclap::ARG_BOOL)
+                << sclap::OptionDescriptor('e', "", sclap::ARG_BOOL);
 
     sclap::Options options(descriptors, argc, argv);
     EXPECT_TRUE(descriptors.valid());
@@ -307,8 +307,8 @@ TEST(DoubleReadTest, TestBool3)
     argv[2] = "--est";
 
     sclap::OptionDescriptors descriptors;
-    descriptors << sclap::OptionDescriptor('t', "test", sclap::ARG_NONE)
-                << sclap::OptionDescriptor('t', "est", sclap::ARG_NONE);
+    descriptors << sclap::OptionDescriptor('t', "test", sclap::ARG_BOOL)
+                << sclap::OptionDescriptor('t', "est", sclap::ARG_BOOL);
 
     sclap::Options options(descriptors, argc, argv);
     EXPECT_TRUE(descriptors.valid());
@@ -576,8 +576,8 @@ TEST(RandomReadTest, Random1)
     sclap::OptionDescriptors descriptors;
     descriptors << sclap::OptionDescriptor('d', "download", sclap::ARG_STRING_VEC)
                 << sclap::OptionDescriptor('e', "execute", sclap::ARG_STRING)
-                << sclap::OptionDescriptor('f', "friendly", sclap::ARG_NONE)
-                << sclap::OptionDescriptor('i', "interactive", sclap::ARG_NONE);
+                << sclap::OptionDescriptor('f', "friendly", sclap::ARG_BOOL)
+                << sclap::OptionDescriptor('i', "interactive", sclap::ARG_BOOL);
 
     sclap::Options options(descriptors, argc, argv);
     EXPECT_TRUE(descriptors.valid());
